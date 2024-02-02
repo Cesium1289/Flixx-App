@@ -57,10 +57,30 @@ async function DisplayPopularShowsToDOM() {
   });
 }
 
+//display backdrop of details page for movies or shows
+async function DisplayBackgroundImage(type, path) {
+  const overlay = document.createElement("div");
+  overlay.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${path})`;
+  overlay.style.backgroundSize = "cover";
+  overlay.style.backgroundPosition = "center";
+  overlay.style.backgroundRepeat = "no-repeat";
+  overlay.style.height = "100vh";
+  overlay.style.width = "100vw";
+  overlay.style.position = "absolute";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.zIndex = "-1";
+  overlay.style.opacity = "0.1";
+
+  if (type === "movie")
+    document.querySelector("#movie-details").appendChild(overlay);
+  else document.querySelector("#show-details").appendChild(overlay);
+}
+
 async function DisplayMovieDetails() {
   const movieId = window.location.search.split("=")[1];
-
   const movie = await FetchAPIData(`movie/${movieId}`);
+  DisplayBackgroundImage("movie", movie.backdrop_path);
   console.log(movie);
   const div = document.createElement("div");
   movie.genres.forEach((genre) => console.log(genre.name));
@@ -123,6 +143,73 @@ async function DisplayMovieDetails() {
   document.querySelector("#movie-details").appendChild(div);
 }
 
+async function DisplayShowDetails() {
+  const showId = window.location.search.split("=")[1];
+  const show = await FetchAPIData(`tv/${showId}`);
+  DisplayBackgroundImage("tv", show.backdrop_path);
+  console.log(show);
+  const div = document.createElement("div");
+  show.genres.forEach((genre) => console.log(genre.name));
+  div.innerHTML = `    <div class="details-top">
+  <div>
+  ${
+    show.poster_path
+      ? ` <img
+      src="https://image.tmdb.org/t/p/w500${show.poster_path}"
+      class="card-img-top"
+      alt="${show.name}"
+      />`
+      : `<img
+      src="images/no-image.jpg"
+      class="card-img-top"
+      alt="${show.name}"
+      />`
+  }
+  </div>
+  <div>
+    <h2>${show.name}</h2>
+    <p>
+      <i class="fas fa-star text-primary"></i>
+      ${show.vote_average.toFixed(1)} / 10
+    </p>
+    <p class="text-muted">Release Date: ${show.first_air_date}</p>
+    <p>
+      ${show.overview}
+    </p>
+    <h5>Genres</h5>
+ 
+    <ul class="list-group">
+    ${show.genres.map((genre) => `<li> ${genre.name} <\li>`).join("")}
+    
+
+    </ul>
+    <a href="${
+      show.homepage
+    }" target="_blank" class="btn">Visit Show Homepage</a>
+  </div>
+</div>
+<div class="details-bottom">
+  <h2>Show Info</h2>
+  <ul>
+    <li><span class="text-secondary">Number Of Episodes:</span> ${
+      show.number_of_episodes
+    }</li>
+    <li>
+      <span class="text-secondary">Last Episode To Air:</span> ${
+        show.last_episode_to_air.name
+      }
+    </li>
+    <li><span class="text-secondary">Status:</span> ${show.status}</li>
+  </ul>
+  <h4>Production Companies</h4>
+  <div class="list-group"><span>${show.production_companies.map(
+    (company) => " " + company.name
+  )}</span></div>
+</div>`;
+
+  document.querySelector("#show-details").appendChild(div);
+}
+
 function AddCommasToNumber(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -182,7 +269,7 @@ function init() {
       DisplayMovieDetails();
       break;
     case "/tv-details.html":
-      console.log("tv details");
+      DisplayShowDetails();
       break;
     case "/search.html":
       console.log("search");
